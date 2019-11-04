@@ -71,13 +71,4 @@ router.delete("/:eventId", checkIfLoggedIn, async (req, res, next) => {
   }
 });
 
-// router.delete("/:bookId/delete", checkIfLoggedIn, (req, res, next) => {
-//   const { bookId } = req.params;
-//   Book.findByIdAndDelete(bookId)
-//     .then(() => {
-//       res.redirect("/books");
-//     })
-//     .catch(next);
-// });
-
 module.exports = router;
