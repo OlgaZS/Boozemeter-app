@@ -1,9 +1,14 @@
 const mongoose = require("mongoose");
-//const User = require("../models/User");
+const User = require("../models/User");
 const { Schema } = mongoose;
 
 const eventSchema = new Schema(
   {
+    user: { type: Schema.Types.ObjectId, ref: User },
+    day: {
+      type: Date,
+      default: Date.now
+    },
     alcohol: {
       type: String,
       enum: [
