@@ -1,39 +1,45 @@
 const mongoose = require("mongoose");
 const User = require("../models/User");
+const Drink = require("../models/Drink");
 const { Schema } = mongoose;
+
+const healthTypesArray = [
+  "Vomiting",
+  "Hangover",
+  "Insomnia",
+  "Stomach pain",
+  "All is fine"
+];
 
 const eventSchema = new Schema(
   {
-    user: { type: Schema.Types.ObjectId, ref: User },
+    user: {
+      type: Schema.Types.ObjectId,
+      ref: User,
+      required: true
+    },
+    /*to create custom drink names within certain drink type constraints.*/
+    drink: {
+      type: Schema.Types.ObjectId,
+      ref: Drink,
+      required: true
+    },
     day: {
       type: Date,
       default: Date.now
     },
-    alcohol: {
-      type: String,
-      enum: [
-        "Beer",
-        "Wine",
-        "Cider",
-        "Liquor",
-        "Vodka",
-        "Cubata",
-        "Tequila",
-        "Short",
-        "Coctail"
-      ]
+    cost: {
+      type: Number,
+      required: true
     },
-    money: { type: Number, required: true },
-    quantity: { type: Number, required: true }, // define if it's units o mililiters
+    // in mililiters
+    volume: {
+      type: Number,
+      required: true
+    },
     health: {
       type: String,
-      enum: [
-        "Vomiting",
-        "Hangover", // 🤯
-        "Insomnia",
-        "Stomach pain",
-        "All is fine"
-      ]
+      enum: healthTypesArray
     }
   },
   {
@@ -41,5 +47,12 @@ const eventSchema = new Schema(
   }
 );
 
+/* GET /api/events endpoint sends data in descending order.
+	So we need to define index in DB for faster sorting
+	reference:
+	https://docs.mongodb.com/manual/indexes/
+	*/
+eventSchema.index({ date: -1 });
+
 const Event = mongoose.model("Event", eventSchema);
-module.exports = Event;
+module.exports = { Event, healthTypesArray };
