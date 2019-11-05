@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const { Schema } = mongoose;
 
-drinkTypesArray = [
+const drinkTypesArray = [
   "Beer",
   "Wine",
   "Cider",
