@@ -1,8 +1,9 @@
 const mongoose = require("mongoose");
 const User = require("../models/User");
-const Drink = require("../models/Drink");
+const { Drink } = require("../models/Drink");
 const { Schema } = mongoose;
 
+/* Labels for front-end that will be displayed to user */
 const healthTypesArray = [
   "Vomiting",
   "Hangover",
@@ -46,13 +47,6 @@ const eventSchema = new Schema(
     timestamps: true
   }
 );
-
-/* GET /api/events endpoint sends data in descending order.
-	So we need to define index in DB for faster sorting
-	reference:
-	https://docs.mongodb.com/manual/indexes/
-	*/
-eventSchema.index({ date: -1 });
 
 const Event = mongoose.model("Event", eventSchema);
 module.exports = { Event, healthTypesArray };
