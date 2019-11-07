@@ -1,10 +1,29 @@
 const express = require("express");
+const mongoose = require("mongoose");
 const { Event, healthTypesArray } = require("../models/Event");
-const User = require("../models/User");
-const { Drink, drinkTypesArray } = require("../models/Drink");
+const { drinkTypesArray } = require("../models/Drink");
 const { checkIfLoggedIn } = require("../middlewares/index");
+const getDrink = require("../helpers/getDrink");
 
 const router = express.Router();
+
+/* Events route:
+/events - shows events for current user
+*/
+
+router.get("/events", checkIfLoggedIn, async (req, res, next) => {
+  const userId = req.session.currentUser._id;
+  if (!userId) return res.status(401).json({ code: "unauthorized" });
+
+  try {
+    const events = await Event.find({ user: userId })
+      .populate("drink")
+      .sort({ date: -1 });
+    return res.json(events);
+  } catch (error) {
+    next(error);
+  }
+});
 
 /* Get one event by eventId */
 router.get("/event/:eventId", checkIfLoggedIn, async (req, res, next) => {
@@ -12,12 +31,13 @@ router.get("/event/:eventId", checkIfLoggedIn, async (req, res, next) => {
   if (!userId) return res.status(401).json({ code: "unauthorized" });
 
   const { eventId } = req.params;
+
   /* user can get only his own events */
   try {
     const foundEvent = await Event.findOne({
       _id: mongoose.Types.ObjectId(eventId),
       user: userId
-    });
+    }).populate("drink");
     if (!foundEvent)
       return res.status(400).json({ code: "invalid income data" });
     return res.json(foundEvent);
@@ -26,8 +46,67 @@ router.get("/event/:eventId", checkIfLoggedIn, async (req, res, next) => {
   }
 });
 
-/* Delete post event */
+/* Add/post event */
+router.post("/events", checkIfLoggedIn, async (req, res, next) => {
+  const {
+    drinkType,
+    drinkName,
+    percentage,
+    date,
+    cost,
+    volume,
+    health
+  } = req.body;
+  const userId = req.session.currentUser._id;
+  if (!userId) return res.status(401).json({ code: "unauthorized" });
 
+  /* we check that all three properties come from front-end
+	if not, send an error */
+  let prepDrinkId;
+  if (drinkType && drinkName && percentage) {
+    /* helper method that gets drink ObjectId from Drink collection */
+    prepDrinkId = await getDrink(res, drinkType, drinkName, percentage);
+  } else {
+    return res.status(400).json({ code: "invalid income data" });
+  }
+
+  /* building mongoose query object */
+  const query = {
+    user: userId,
+    drink: prepDrinkId,
+    date: date
+  };
+
+  if (cost) query.cost = parseInt(cost);
+
+  /* because volume field on Event Schema is mandatory we need to
+	check if volume value was specified from front-end. */
+  if (volume) {
+    query.volume = parseInt(volume);
+  } else {
+    return res.status(400).json({ code: "invalid income data" });
+  }
+
+  /* health field on Event Schema is optional,
+	hawever we don't want random strings to be specified at
+	this field. so we perform checks. */
+  if (health) {
+    if (healthTypesArray.indexOf(health) > -1) {
+      query.health = health;
+    } else {
+      return res.status(400).json({ code: "invalid income data" });
+    }
+  }
+
+  try {
+    const newEvent = await Event.create(query);
+    return res.json(newEvent);
+  } catch (error) {
+    next(error);
+  }
+});
+
+/* delete post event */
 router.delete("/events/:eventId", checkIfLoggedIn, async (req, res, next) => {
   const userId = req.session.currentUser._id;
   if (!userId) return res.status(401).json({ code: "unauthorized" });
@@ -50,57 +129,12 @@ router.delete("/events/:eventId", checkIfLoggedIn, async (req, res, next) => {
 
 module.exports = router;
 
-/* GET this day event listing. */
-// //const today = new Date().toISOString().slice(0, 10);
-
-// router.get("/events", checkIfLoggedIn, async (req, res, next) => {
-//   const owner = res.locals.currentUser._id;
-//   const { day } = req.body;
-
-//   //db.events.find({day: {"$gte": new Date("2019-10-31"), "$lt": new Date("2019-11-01")}}) - asi funciona en BD para hacer la busqueda
-//   try {
-//     const events = await Event.find({ day: day });
-//     //const events = await Event.find({day: {"$gte": new Date(day), "$lt": new Date(dayBefore)}});
-//     res.json(events);
-//   } catch (error) {
-//     next(error);
-//   }
+// /* endpoint is needed for rendering available labels on front-end */
+// router.get("/drink", async (req, res) => {
+//   return res.json(drinkTypesArray);
 // });
 
-// /* Add/post event */
-
-// router.post("/events", checkIfLoggedIn, async (req, res, next) => {
-//   const { alcohol, money, quantity, health } = req.body;
-//   const owner = req.session.currentUser._id;
-
-//   try {
-//     const event = await Event.create({
-//       user: owner,
-//       alcohol,
-//       money,
-//       quantity,
-//       health
-//     });
-//     res.json(event);
-//   } catch (error) {
-//     next(error);
-//   }
-// });
-
-/* update event */
-
-// router.put("/events/:eventId", checkIfLoggedIn, async (req, res, next) => {
-//   const { eventId } = req.params;
-//   const { alcohol, money, quantity, health } = req.body;
-//   try {
-//     const event = await Event.findByIdAndUpdate(eventId, {
-//       alcohol,
-//       money,
-//       quantity,
-//       health
-//     });
-//     res.json(event);
-//   } catch (error) {
-//     next(error);
-//   }
+// /* endpoint is needed for rendering available labels on front-end */
+// router.get("/health", async (req, res) => {
+//   return res.json(healthTypesArray);
 // });
