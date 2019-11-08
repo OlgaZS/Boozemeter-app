@@ -4,6 +4,7 @@ const bcrypt = require("bcrypt");
 const { checkUsernameAndPasswordNotEmpty } = require("../middlewares");
 
 const User = require("../models/User");
+const { checkIfLoggedIn } = require("../middlewares/index");
 
 const bcryptSalt = 10;
 
@@ -71,19 +72,19 @@ router.get("/logout", (req, res, next) => {
 });
 
 // Change nombre of user//
-// router.post("/update", checkIfLoggedIn, async (req, res, next) => {
-//   const { username } = req.body;
-//   const userId = req.session.currentUser._id;
+router.post("/update", checkIfLoggedIn, async (req, res, next) => {
+  const { username } = req.body;
+  const userId = req.session.currentUser._id;
 
-//   try {
-//     const user = await User.findById(userId);
-//     user.username = username;
-//     await user.save();
+  try {
+    const user = await User.findById(userId);
+    user.username = username;
+    await user.save();
 
-//     return res.json({ code: "success" });
-//   } catch (error) {
-//     next(error);
-//   }
-// });
+    return res.json({ code: "success" });
+  } catch (error) {
+    next(error);
+  }
+});
 
 module.exports = router;
