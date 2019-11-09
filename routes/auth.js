@@ -71,7 +71,7 @@ router.get("/logout", (req, res, next) => {
   });
 });
 
-// Change nombre of user//
+// Change name of user//
 router.post("/update", checkIfLoggedIn, async (req, res, next) => {
   const { username } = req.body;
   const userId = req.session.currentUser._id;
