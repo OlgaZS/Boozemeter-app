@@ -25,7 +25,7 @@ const eventSchema = new Schema(
       ref: Drink,
       required: true
     },
-    day: {
+    date: {
       type: Date,
       default: Date.now
     },

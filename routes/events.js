@@ -48,26 +48,18 @@ router.get("/event/:eventId", checkIfLoggedIn, async (req, res, next) => {
 
 /* Add/post event */
 router.post("/events", checkIfLoggedIn, async (req, res, next) => {
-  const {
-    drinkType,
-    drinkName,
-    percentage,
-    date,
-    cost,
-    volume,
-    health
-  } = req.body;
+  const { type, name, percentage, date, cost, volume, health } = req.body;
   const userId = req.session.currentUser._id;
   if (!userId) return res.status(401).json({ code: "unauthorized" });
 
   /* we check that all three properties come from front-end
 	if not, send an error */
   let prepDrinkId;
-  if (drinkType && drinkName && percentage) {
+  if (type && name && percentage) {
     /* helper method that gets drink ObjectId from Drink collection */
-    prepDrinkId = await getDrink(res, drinkType, drinkName, percentage);
+    prepDrinkId = await getDrink(res, type, name, percentage);
   } else {
-    return res.status(400).json({ code: "invalid income data" });
+    return res.status(400).json({ code: "Drink: invalid income data" });
   }
 
   /* building mongoose query object */
@@ -84,7 +76,7 @@ router.post("/events", checkIfLoggedIn, async (req, res, next) => {
   if (volume) {
     query.volume = parseInt(volume);
   } else {
-    return res.status(400).json({ code: "invalid income data" });
+    return res.status(400).json({ code: "Volume: invalid income data" });
   }
 
   /* health field on Event Schema is optional,
@@ -94,7 +86,7 @@ router.post("/events", checkIfLoggedIn, async (req, res, next) => {
     if (healthTypesArray.indexOf(health) > -1) {
       query.health = health;
     } else {
-      return res.status(400).json({ code: "invalid income data" });
+      return res.status(400).json({ code: "Healt: invalid income data" });
     }
   }
 
@@ -127,14 +119,14 @@ router.delete("/events/:eventId", checkIfLoggedIn, async (req, res, next) => {
   }
 });
 
+/* rendering available labels on front-end */
+router.get("/drink", async (req, res) => {
+  return res.json(drinkTypesArray);
+});
+
+/* rendering available labels on front-end */
+router.get("/health", async (req, res) => {
+  return res.json(healthTypesArray);
+});
+
 module.exports = router;
-
-// /* endpoint is needed for rendering available labels on front-end */
-// router.get("/drink", async (req, res) => {
-//   return res.json(drinkTypesArray);
-// });
-
-// /* endpoint is needed for rendering available labels on front-end */
-// router.get("/health", async (req, res) => {
-//   return res.json(healthTypesArray);
-// });
