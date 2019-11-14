@@ -4,6 +4,10 @@ const { Event, healthTypesArray } = require("../models/Event");
 const { drinkTypesArray } = require("../models/Drink");
 const { checkIfLoggedIn } = require("../middlewares/index");
 const getDrink = require("../helpers/getDrink");
+const {
+  getDateStartTimestamp,
+  getDateEndTimestamp
+} = require("../helpers/getDate");
 
 const router = express.Router();
 
@@ -26,6 +30,31 @@ router.get("/events", checkIfLoggedIn, async (req, res, next) => {
 });
 
 /* Get one event by eventId */
+
+router.get("/date-events/:date", checkIfLoggedIn, async (req, res, next) => {
+  const userId = req.session.currentUser._id;
+  if (!userId) return res.status(401).json({ code: "unauthorized" });
+
+  const { date } = req.params;
+  const parsedDate = parseInt(date);
+  const startDate = getDateStartTimestamp(parsedDate);
+  const endDate = getDateEndTimestamp(parsedDate);
+
+  try {
+    const events = await Event.find({
+      user: userId,
+      /* select only events that lies in period
+			from startDate to endDate */
+      date: { $gte: startDate, $lte: endDate }
+    })
+      .populate("drink")
+      .sort({ date: -1 });
+    return res.json(events);
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.get("/event/:eventId", checkIfLoggedIn, async (req, res, next) => {
   const userId = req.session.currentUser._id;
   if (!userId) return res.status(401).json({ code: "unauthorized" });
@@ -130,3 +159,23 @@ router.get("/health", async (req, res) => {
 });
 
 module.exports = router;
+
+// router.get("/eventByDay/:date", checkIfLoggedIn, async (req, res, next) => {
+//   const userId = req.session.currentUser._id;
+//   if (!userId) return res.status(401).json({ code: "unauthorized" });
+
+//   const { date } = req.params;
+
+//   /* user can get only his own events */
+//   try {
+//     const foundEvent = await Event.find({
+//       date: mongoose.Types.Date(date),
+//       user: userId
+//     }).populate("drink");
+//     if (!foundEvent)
+//       return res.status(400).json({ code: "invalid income data" });
+//     return res.json(foundEvent);
+//   } catch (error) {
+//     next(error);
+//   }
+// });
