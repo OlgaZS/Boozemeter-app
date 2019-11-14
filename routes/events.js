@@ -159,23 +159,3 @@ router.get("/health", async (req, res) => {
 });
 
 module.exports = router;
-
-// router.get("/eventByDay/:date", checkIfLoggedIn, async (req, res, next) => {
-//   const userId = req.session.currentUser._id;
-//   if (!userId) return res.status(401).json({ code: "unauthorized" });
-
-//   const { date } = req.params;
-
-//   /* user can get only his own events */
-//   try {
-//     const foundEvent = await Event.find({
-//       date: mongoose.Types.Date(date),
-//       user: userId
-//     }).populate("drink");
-//     if (!foundEvent)
-//       return res.status(400).json({ code: "invalid income data" });
-//     return res.json(foundEvent);
-//   } catch (error) {
-//     next(error);
-//   }
-// });
