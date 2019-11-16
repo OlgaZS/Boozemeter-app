@@ -29,8 +29,7 @@ router.get("/events", checkIfLoggedIn, async (req, res, next) => {
   }
 });
 
-/* Get one event by eventId */
-
+/* Get one event by date */
 router.get("/date-events/:date", checkIfLoggedIn, async (req, res, next) => {
   const userId = req.session.currentUser._id;
   if (!userId) return res.status(401).json({ code: "unauthorized" });
@@ -54,6 +53,66 @@ router.get("/date-events/:date", checkIfLoggedIn, async (req, res, next) => {
     next(error);
   }
 });
+
+/* Get statistics by user/by days*/
+
+router.get(
+  "/statistics/user/:days",
+  checkIfLoggedIn,
+  async (req, res, next) => {
+    const userId = req.session.currentUser._id;
+    if (!userId) return res.status(401).json({ code: "unauthorized" });
+
+    const { days } = req.params; // comes from front-end in ms
+
+    const periodEnd = new Date();
+    /* date X days ago */
+    const periodStart = new Date(
+      periodEnd.getTime() - parseInt(days) * 24 * 60 * 60 * 1000
+    );
+
+    const calcFreqHealth = arr => {
+      const sortedArr = arr.sort((itemA, itemB) => {
+        return (
+          arr.filter(filterItem => filterItem.health === itemA.health) -
+          arr.filter(filterItem => filterItem.health === itemB.health).length
+        );
+      });
+      return sortedArr.pop().health;
+    };
+
+    const calcFreqDrink = arr => {
+      const sortedArr = arr.sort((itemA, itemB) => {
+        return (
+          arr.filter(filterItem => filterItem.drink.type === itemA.drink.type) -
+          arr.filter(filterItem => filterItem.drink.type === itemB.drink.type)
+            .length
+        );
+      });
+      return sortedArr.pop().drink.type;
+    };
+
+    // drink.type
+
+    try {
+      const events = await Event.find({
+        user: userId,
+        date: { $gte: periodStart, $lte: periodEnd }
+      }).populate("drink");
+
+      return res.json({
+        freqHealth: calcFreqHealth(events),
+        boozeDays: 3,
+        freqDrink: calcFreqDrink(events),
+        moneySpend: 50
+      });
+    } catch (error) {
+      return res.status(500).json({ code: "internal error" });
+    }
+  }
+);
+
+/* Get one event by eventId */
 
 router.get("/event/:eventId", checkIfLoggedIn, async (req, res, next) => {
   const userId = req.session.currentUser._id;
