@@ -6,7 +6,8 @@ const { checkIfLoggedIn } = require("../middlewares/index");
 const getDrink = require("../helpers/getDrink");
 const {
   getDateStartTimestamp,
-  getDateEndTimestamp
+  getDateEndTimestamp,
+  getFormattedDateString
 } = require("../helpers/getDate");
 
 const router = express.Router();
@@ -58,6 +59,7 @@ router.get("/date-events/:date", checkIfLoggedIn, async (req, res, next) => {
 
 router.get(
   "/statistics/user/:days",
+
   checkIfLoggedIn,
   async (req, res, next) => {
     const userId = req.session.currentUser._id;
@@ -92,7 +94,27 @@ router.get(
       return sortedArr.pop().drink.type;
     };
 
-    // drink.type
+    const calcBoozeTime = arr => {
+      const days = [];
+      arr.forEach(item => {
+        const dateStr = getFormattedDateString(item.date);
+        /*  only unique date
+        strings in this array	 */
+        if (!(days.indexOf(dateStr) > -1)) days.push(dateStr);
+      });
+
+      return days.length;
+    };
+
+    /* calculates money spent
+		for single user or group */
+    const calcMoneySpent = arr => {
+      let money = 0;
+      arr.forEach(item => {
+        money = money + item.cost;
+      });
+      return money;
+    };
 
     try {
       const events = await Event.find({
@@ -101,10 +123,10 @@ router.get(
       }).populate("drink");
 
       return res.json({
-        freqHealth: calcFreqHealth(events),
-        boozeDays: 3,
-        freqDrink: calcFreqDrink(events),
-        moneySpend: 50
+        boozeTime: calcBoozeTime(events),
+        favDrink: calcFreqDrink(events),
+        moneySpent: calcMoneySpent(events),
+        freqHealth: calcFreqHealth(events)
       });
     } catch (error) {
       return res.status(500).json({ code: "internal error" });

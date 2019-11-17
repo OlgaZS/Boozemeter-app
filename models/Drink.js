@@ -9,8 +9,8 @@ const drinkTypesArray = [
   "Vodka",
   "Cubata",
   "Tequila",
-  "Short",
-  "Coctail"
+  "SCognac",
+  "Cocktail"
 ];
 
 const drinkSchema = new Schema(
