@@ -59,7 +59,6 @@ router.get("/date-events/:date", checkIfLoggedIn, async (req, res, next) => {
 
 router.get(
   "/statistics/user/:days",
-
   checkIfLoggedIn,
   async (req, res, next) => {
     const userId = req.session.currentUser._id;
@@ -119,6 +118,81 @@ router.get(
     try {
       const events = await Event.find({
         user: userId,
+        date: { $gte: periodStart, $lte: periodEnd }
+      }).populate("drink");
+
+      return res.json({
+        boozeTime: calcBoozeTime(events),
+        favDrink: calcFreqDrink(events),
+        moneySpent: calcMoneySpent(events),
+        freqHealth: calcFreqHealth(events)
+      });
+    } catch (error) {
+      return res.status(500).json({ code: "internal error" });
+    }
+  }
+);
+
+router.get(
+  "/statistics/group/:days",
+  checkIfLoggedIn,
+  async (req, res, next) => {
+    const userId = req.session.currentUser._id;
+    if (!userId) return res.status(401).json({ code: "unauthorized" });
+
+    const { days } = req.params; // comes from front-end in ms
+
+    const periodEnd = new Date();
+    /* date X days ago */
+    const periodStart = new Date(
+      periodEnd.getTime() - parseInt(days) * 24 * 60 * 60 * 1000
+    );
+
+    const calcFreqHealth = arr => {
+      const sortedArr = arr.sort((itemA, itemB) => {
+        return (
+          arr.filter(filterItem => filterItem.health === itemA.health) -
+          arr.filter(filterItem => filterItem.health === itemB.health).length
+        );
+      });
+      return sortedArr.pop().health;
+    };
+
+    const calcFreqDrink = arr => {
+      const sortedArr = arr.sort((itemA, itemB) => {
+        return (
+          arr.filter(filterItem => filterItem.drink.type === itemA.drink.type) -
+          arr.filter(filterItem => filterItem.drink.type === itemB.drink.type)
+            .length
+        );
+      });
+      return sortedArr.pop().drink.type;
+    };
+
+    const calcBoozeTime = arr => {
+      const days = [];
+      arr.forEach(item => {
+        const dateStr = getFormattedDateString(item.date);
+        /*  only unique date
+        strings in this array	 */
+        if (!(days.indexOf(dateStr) > -1)) days.push(dateStr);
+      });
+
+      return days.length;
+    };
+
+    /* calculates money spent
+		for single user or group */
+    const calcMoneySpent = arr => {
+      let money = 0;
+      arr.forEach(item => {
+        money = money + item.cost;
+      });
+      return money;
+    };
+
+    try {
+      const events = await Event.find({
         date: { $gte: periodStart, $lte: periodEnd }
       }).populate("drink");
 
