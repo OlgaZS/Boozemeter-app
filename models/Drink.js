@@ -9,7 +9,7 @@ const drinkTypesArray = [
   "Vodka",
   "Cubata",
   "Tequila",
-  "SCognac",
+  "Cognac",
   "Cocktail"
 ];
 
