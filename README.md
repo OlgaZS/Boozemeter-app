@@ -1,19 +1,20 @@
-# Boozemeter-app
 Boozmeter your app to muesure your drinks, money spend and health
+
 # Boozemeter
 
 ## Description
- Mobile only.
-The app in notifications will ask you every day if you drank yesterday. And then, at any time, you can see the "statistics."
-You can choose the type of alcohol, add a new type of alcohol(in one of the three quantity gradations, optional). 
-You can track drunk volumes, cash expenses and hangover/health.
 
-In the application, you can see not only your own statistics, but also the average user statistics for any selected period.
-
+In the application user can:
+-sign up
+-login
+-logout
+-Add drink to the calendar, choosing from the list of popular drinks, add health state, money spent and additional details of the drink (such as volume, % of alcohol and name).
+-In the calendar see drink consumption, volume, money spent and health
+-See more datails of each drink added to calendar
+-Delete drink.
+-See your own "statistics" and group (average user) "statistic"(it is posiible to choose period of statistics).
 
 ## User Stories
-
-**404** - As a user I want to see a nice 404 page when I go to a page that doesn’t exist so that I know it was my fault
 
 **500** - As a user I want to see a nice error page when the super team screws it up so that I know that is not my fault
 
@@ -35,13 +36,11 @@ In the application, you can see not only your own statistics, but also the avera
 
 **Community Booze statistic** - As a user I want to see the community statistic details of the selected period of time: average alcohol consumed, average money spend, average health/hangover, top drink of the period.
 
-
 ## Backlog
 
 List of other features outside of the MVPs scope
 
 User profile: - see my profile - upload my profile picture - see other users profile - list of events created by the user - list events the user is attending
-
 
 Homepage: - …
 
@@ -58,33 +57,65 @@ User model
     	password: String
     }
 
-Alcohol model
+Drink:
+/_ name: drink name ('Martini', 'Jameson', 'Heineken' etc.) _/
+{
+name: {
+type: String,
+required: true
+},
+/_ type: more broad drink type category ("Beer","Wine", "Cider", etc.)_/
+type: {
+type: String,
+enum: drinkTypesArray,
+required: true
+},
+/_ percentage: alcohol %% in the drink. _/
+percentage: {
+type: Number,
+required: true
+}
+},
+{
+timestamps: true
+}
+);
 
-    { 
-    	owner: ObjectId<User>
-    	name: String
-    	type: String
-	degree: number
-    	Volume: []
-    	
-    	+
-    }
- 
-
-Day/event model:
-
-{ 
-    	owner: ObjectId<User>
-    	Alcohol: ObjectId<Alcohol>
-    	Volume: String
-    	Price: string
-    	hangover: true, false
-                 health: []
-                 mood:[]
-    	+
-    }
-
-
+Event model(add drink): (
+{
+user: {
+type: Schema.Types.ObjectId,
+ref: User,
+required: true
+},
+/_to create custom drink names within certain drink type constraints._/
+drink: {
+type: Schema.Types.ObjectId,
+ref: Drink,
+required: true
+},
+date: {
+type: Date,
+default: Date.now
+},
+cost: {
+type: Number,
+required: true
+},
+// in mililiters
+volume: {
+type: Number,
+required: true
+},
+health: {
+type: String,
+enum: healthTypesArray
+}
+},
+{
+timestamps: true
+}
+);
 
 ## Links
 
@@ -92,12 +123,12 @@ Day/event model:
 
 The url to your repository and to your deployed project
 
-[Repository Frontend Link](http://github.com/)
+[Repository Frontend Link](https://github.com/OlgaZS/Boozemeter-app-front-end)
 
-[Repository Backend Link](http://github.com/)
+[Repository Backend Link](https://github.com/OlgaZS/Boozemeter-app-back-end)
 
-[Deploy Link](http://heroku.com/)
+[Deploy Link](https://boozemeter.netlify.com/)
 
 ### Slides
 
-[Slides Link](http://slides.com/)
+[Slides Link](https://docs.google.com/presentation/d/17_lHsxZkMYv1v5ZvVBrm5vGnEHmSTHZqsK-gSGAt0Ls/edit?usp=sharing)
