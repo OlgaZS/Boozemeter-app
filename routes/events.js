@@ -283,7 +283,7 @@ router.post("/events", checkIfLoggedIn, async (req, res, next) => {
 });
 
 /* delete post event */
-router.delete("/events/:eventId", checkIfLoggedIn, async (req, res, next) => {
+router.delete("/event/:eventId", checkIfLoggedIn, async (req, res, next) => {
   const userId = req.session.currentUser._id;
   if (!userId) return res.status(401).json({ code: "unauthorized" });
 
